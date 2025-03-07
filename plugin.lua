@@ -27,14 +27,17 @@ local function go(x)
         return
     end
 
-    local range = read()
+    local config = read()
 
-    range = {
-        min = (type(range) == "table" and tonumber(range.min)) or 1,
-        max = (type(range) == "table" and tonumber(range.max)) or 8,
+    config = {
+        min = (type(config) == "table" and tonumber(config.min)) or 1,
+        max = (type(config) == "table" and tonumber(config.max)) or 8,
+        use_clipboard = type(config) == "table" and
+            config.use_clipboard or
+            {} ~= "false",
     }
 
-    write(range)
+    write(config)
     local times = ""
     local objs = map.HitObjects
 
@@ -42,10 +45,10 @@ local function go(x)
         -- We're performing math.abs manually, because it's faster.
         local start_offset = objs[i].StartTime - objs[i - 1].StartTime
 
-        if start_offset <= -range.min or
-            start_offset >= range.min and
-            start_offset >= -range.max and
-            start_offset <= range.max then
+        if start_offset <= -config.min or
+            start_offset >= config.min and
+            start_offset >= -config.max and
+            start_offset <= config.max then
             previous = false
 
             times = times ..
@@ -60,14 +63,16 @@ local function go(x)
         print(
             "w",
             "Following objects are snapped " ..
-            tostring(range.min) ..
+            tostring(config.min) ..
             "-" ..
-            tostring(range.max) ..
+            tostring(config.max) ..
             "ms after their previous: " ..
             times
         )
 
-        imgui.SetClipboardText(times)
+        if config.use_clipboard then
+            imgui.SetClipboardText(times)
+        end
     elseif not previous then
         previous = true
         print("s", "Map has no incorrect snaps!")
